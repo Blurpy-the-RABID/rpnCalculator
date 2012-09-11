@@ -13,21 +13,57 @@ namespace RPNCalculator {
             Console.WriteLine("For example, to calculate '3 + 4', you would type, '3 4 +'.  To calculate '3 + 5 * 7', you would type, '3 5 7 * +'.");
             Console.Write("Please type in the mathematical operation that you wish to calculate: ");
             string userInput = Console.ReadLine();
-            string[] tokens = userInput.Split(' ');
-            Stack tokenStack = new Stack(); // This Stack shall contain the user's input.
+            decimal result = calculateRPN(userInput);
+            Console.WriteLine("\nResult is {0}", result);
+        }
+
+        // I changed my code to work like the code I found at Rosettacode.org (http://rosettacode.org/wiki/Parsing/RPN_calculator_algorithm#C.23).
+        // I see now that I was overcomplicating how I was handling the Stack.  It's actually much simpler than I originally thought.
+
+        static decimal calculateRPN(string rpn) {
+            string[] tokens = rpn.Split(' ');
+            Stack<decimal> tokenStack = new Stack<decimal>(); // This Stack shall contain the user's input.
+            decimal number = decimal.Zero;
 
             foreach (string token in tokens) {
-                if (token == "+" || token == "-" || token == "*" || token == "/") {
-                    tokenStack.Pop();
+                if (decimal.TryParse(token, out number)) {
+                    tokenStack.Push(number);
                 }
                 else {
-                    tokenStack.Push(token);
+                    switch (token) {
+                        case "*":
+                            tokenStack.Push(tokenStack.Pop() * tokenStack.Pop());
+                            break;
+                        case "/":
+                            number = tokenStack.Pop();
+                            tokenStack.Push(tokenStack.Pop() / number);
+                            break;
+                        case "+":
+                            tokenStack.Push(tokenStack.Pop() + tokenStack.Pop());
+                            break;
+                        case "-":
+                            number = tokenStack.Pop();
+                            tokenStack.Push(tokenStack.Pop() - number);
+                            break;
+                        default:
+                            Console.WriteLine("Error in calculateRPN method!");
+                            break;
+                    }
                 }
+                PrintState(tokenStack);
             }
-            Console.WriteLine("Answer: {0}", tokenStack);
+            return tokenStack.Pop();
+        }
 
+        // This is a rather useful function.  It allows us to see the mathwork as it's being done.  Again, credit goes to the code I found on Rosettacode.org.
+        static void PrintState(Stack<decimal> stack) {
+            decimal[] arr = stack.ToArray();
 
-            // Now that we've assigned the user's input to a Stack, we'll now scroll through the user's input and perform calculations whenever an operator is encountered.
+            for (int i = arr.Length - 1; i >= 0; i--) {
+                Console.Write("{0,-8:F3}", arr[i]);
+            }
+
+            Console.WriteLine();
         }
     }
 }
